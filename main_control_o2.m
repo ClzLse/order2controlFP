@@ -41,7 +41,7 @@ Efp = @(x,ff) (Efp_arg(x,ff))*dv;   % FP drift
 Ehjb = @(x,ff) -Efp(x,ff);      % HJB drift
 Q_arg = @(x,ff,dpsi) (P(v,x).*(x'-v))*(ff.*dpsi);
 Q = @(x,ff,dpsi) (Q_arg(x,ff,dpsi))*dv;     % integral term appearing in the HJB
-
+Sfun = @(x) 1;
 % initialization
 f_time = repmat(f0,1,Nt+1);
 Du =  zeros(size(f_time));
@@ -69,7 +69,7 @@ lambda_app = lambda;
 contr = contr - lambda_app*(gamma.*contr + Du);
 DU_L = gamma.*contr + Du;
 f_time = time_semi_implicit_CC_1d_o2(f0,Efp,contr,D,dD,v,dt,Nt);%FP_ordine1_2d(dt,Nt,V,C,Du,E,f0,D,gamma,v,c,nv,nc,contr,tipo_iter);
-cost_vector(k) = cost_1d(v(:),x_d,contr,gamma,f_time,dv,dt);
+cost_vector(k) = cost_1d(v(:),x_d,contr,gamma,f_time,Sfun,dv,dt);
 contr_nm1 = contr_n;
 contr_n = contr;
 old_cost = cost_vector(k);
@@ -86,7 +86,7 @@ while (err_cost > 1e-5 && k<=Maxiter)
     contr_nm1 = contr_n;
     contr_n = contr;
     f_time = time_semi_implicit_CC_1d_o2(f0,Efp,contr,D,dD,v,dt,Nt);%FP_ordine1_2d(dt,Nt,V,C,Du,E,f0,D,gamma,v,c,nv,nc,contr,tipo_iter);
-    cost_vector(k) = cost_1d(v(:),x_d,contr,gamma,f_time,dv,dt);
+    cost_vector(k) = cost_1d(v(:),x_d,contr,gamma,f_time,Sfun,dv,dt);
     iter_min = 0;
 
     % loop in case the Barzilai-Borwein fails
@@ -97,7 +97,7 @@ while (err_cost > 1e-5 && k<=Maxiter)
         contr_nm1 = contr_n;
         contr_n = contr;
         f_time = time_semi_implicit_CC_1d_o2(f0,Efp,contr,D,dD,v,dt,Nt);%FP_ordine1_2d(dt,Nt,V,C,Du,E,f0,D,gamma,v,c,nv,nc,contr,tipo_iter);
-        cost_vector(k) = cost_1d(v(:),x_d,contr,gamma,f_time,dv,dt);
+        cost_vector(k) = cost_1d(v(:),x_d,contr,gamma,f_time,Sfun,dv,dt);
         iter_min = iter_min + 1;
 
     end
@@ -110,3 +110,6 @@ while (err_cost > 1e-5 && k<=Maxiter)
 end
 
 cost_vector = cost_vector(1:k-1);
+set(0,'DefaultLineLineWidth',4);
+semilogy(1:k-1,cost_vector,'o')
+xlabel('$k$'), ylabel('$\mathcal{J}(\cdot;f_0)$')
